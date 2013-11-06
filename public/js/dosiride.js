@@ -20,13 +20,23 @@ function DOSIRide(){
 	var hand= [];
 	var _this = this;
 	
-	/** Ajout d'une carte dans la main du joueur. */
-	this.ajouterCarte = function (card){
-		$('#hand').append(
-				'<span class="card' + card + '"><img src="/img/cartes/' + cartes[card]
-						+ '.jpg" class="card" onclick="dr.selectionMain(this);" /><i>8</i></span>');
-		hand.push(card);
-	};
+	
+/** Ajout d'une carte dans la main du joueur. */
+this.ajouterCarte = function (card){
+  if(!_.contains(hand, card)){ // Fonction contains du module underscore : retourne vrai si la la valeur est prèsente dans la liste
+	$('#hand').append(
+	'<span class="card' + card + '"><img src="/img/cartes/' +
+	cartes[card] + '.jpg" class="card" /><i></i></span>');
+  } else {
+	var same = hand.filter(function (elt){ return elt == card; });// Vérifier si la carte n'existe pas dèja sur notre main, 
+	var nb = $('#hand span.card' + card + ' i'); // On récupère notre carte
+	nb.text(same.length + 1); // on ajoute en bas le nombre de cartes du mème type qui est = à la taille du tableau
+	nb.show(); 
+  }
+hand.push(card);
+_.sortBy(hand, function (val) { return val; });
+};
+
 
     /** Retrait d'une carte de la main du joueur. */
 	this.retirerCarte = function (card){
@@ -37,11 +47,20 @@ function DOSIRide(){
 	
 	/** Action de selection d'une carte dans la pioche. */
 	this.cartePioche = function (elt) {
-		var index = $('#cards img').index(elt)
-		  , card = 	_this.cards[index]
-		  , img = $(elt);
-		// ...
-	};
+var index = $('#cards img').index(elt)
+, card =
+_this.cards[index]
+, img = $(elt);
+$.post("/jeu/"+dr.partie+"/" +dr.name+"/pioche/"+index, function ( data ) { // Requète Ajax 
+$( ".result" ).html( data );
+_this.ajouterCarte(card);
+_this.cards[index] = data.carte;
+img.fadeOut(400, function (){
+img.attr('src', '/img/cartes/' + cartes[data.carte] + '.jpg');
+img.fadeIn();
+});
+});
+};
 	
 	/** Action de selection d'une carte dans la main. */
 	this.selectionMain = function (elt) {
